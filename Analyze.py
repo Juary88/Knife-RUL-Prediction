@@ -4,21 +4,30 @@ from mpl_toolkits.mplot3d import Axes3D
 import seaborn as sns
 import numpy as np
 import pylab as pl
+from librosa.feature import mfcc
 # X = [1, 1, 2, 2]
 # Y = [3, 4, 4, 3]
 # Z = [1, 2, 1, 1]
 
+for i in range(2, 35):
+    # data = pd.read_csv("train/01/PLC/plc.csv").values
+    data = pd.read_csv("train/03/Sensor/{}.csv".format(i)).values
+    # print(len(data[:,0]))
+    # csv_nos = set(data[:,-1])
+    # print(csv_nos)
+    spinde = data[:,1]
+    # spinde = np.fft.fft(spinde)
+    spinde = mfcc(y=spinde, sr=25600, S=None, n_mfcc=20, dct_type=2, norm='ortho')
+    # print(spinde)
+    print(len(spinde))
 
-# data = pd.read_csv("train/02/PLC/plc.csv").values
-data = pd.read_csv("train/01/Sensor/{}.csv".format(46)).values
-# print(len(data[:,0]))
-# csv_nos = set(data[:,-1])
-# print(csv_nos)
-spinde = data[:,0]
-spinde = np.fft.fft(spinde)
-index = [i for i in range(len(spinde))]
-plt.plot(index, spinde)
-plt.show()
+    plt.imshow(np.flipud(spinde), cmap=plt.cm.jet, aspect=100, extent=[0,spinde.shape[1],0,spinde.shape[0]])
+    plt.show()
+
+
+# index = [i for i in range(len(spinde))]
+# plt.plot(index[10000:1500000], spinde[10000:1500000])
+# plt.show()
 # a = {}
 # for d in data:
 #     if d[-1] in a:
