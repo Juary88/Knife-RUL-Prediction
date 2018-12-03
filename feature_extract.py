@@ -122,32 +122,85 @@ import seaborn as sns
 # plt.plot([i for i in range(len(variance))], variance)
 # plt.show()
 
-# denominator of clearance factor
-denominator = []
-for i in range(1, 47):
-    data = pd.read_csv("train/01/Sensor/{}.csv".format(i+1)).values
-    print(i)
+# # denominator of clearance factor
+# denominator = []
+# for i in range(1, 47):
+#     data = pd.read_csv("train/01/Sensor/{}.csv".format(i+1)).values
+#     print(i)
+#
+#     x = data[:, 0]
+#     z = data[:, 1]
+#     y = data[:, 2]
+#     print(len(x))
+#     i = 0
+#     while (i+1)*256000 < len(x) - 256000:
+#         vs = x[i*256000: (i+1)*256000]
+#         sum = 0.0
+#         for v in vs:
+#             sum += v*v
+#         denominator.append(sum/len(vs))
+#         i = i + 1
+#     vs = x[i * 256000:]
+#     sum = 0.0
+#     for v in vs:
+#         sum += v * v
+#     denominator.append(sum / len(vs))
+#
+# df = pd.DataFrame({"denominator":denominator, 'index':[i for i in range(len(denominator))]})
+#
+# sns.pairplot(df, y_vars='denominator', x_vars='index', size=12, aspect=1, kind='reg')
+# plt.plot([i for i in range(len(denominator))], denominator)
+# plt.show()
 
-    x = data[:, 0]
-    z = data[:, 1]
-    y = data[:, 2]
-    print(len(x))
+kurtosis = []
+skew = []
+variance = []
+denominator = []
+maxs = []
+length = 46
+dim = 0
+is_fft = True
+
+for j in range(1, length):
+    data = pd.read_csv("train/{}/Sensor/{}.csv".format(id, j + 1)).values
+    x = data[:, dim]
+    # z = data[:, 1]
+    # y = data[:, 2]
+
     i = 0
-    while (i+1)*256000 < len(x) - 256000:
-        vs = x[i*256000: (i+1)*256000]
+    while (i + 1) * 256000 < len(x) - 256000:
+        if is_fft:
+            tmp = np.fft.fft(x[i * 256000: (i + 1) * 256000])
+        k = stats.kurtosis(tmp)
+        kurtosis.append(k)
+        s = stats.skew(tmp)
+
+        skew.append(s)
+        v = tmp.var()
+        variance.append(v)
+
+        vs = tmp
         sum = 0.0
         for v in vs:
-            sum += v*v
-        denominator.append(sum/len(vs))
+            sum += v * v
+        denominator.append(sum / len(vs))
+
+        m = tmp.max()
+        maxs.append(m)
+
         i = i + 1
-    vs = x[i * 256000:]
+    if is_fft:
+        tmp = np.fft.fft(x[i * 256000:])
+    k = stats.kurtosis(tmp)
+    kurtosis.append(k)
+    s = stats.skew(tmp)
+    skew.append(s)
+    v = tmp.var()
+    variance.append(v)
+    vs = tmp
     sum = 0.0
     for v in vs:
         sum += v * v
     denominator.append(sum / len(vs))
-
-df = pd.DataFrame({"denominator":denominator, 'index':[i for i in range(len(denominator))]})
-
-sns.pairplot(df, y_vars='denominator', x_vars='index', size=12, aspect=1, kind='reg')
-plt.plot([i for i in range(len(denominator))], denominator)
-plt.show()
+    m = tmp.max()
+    maxs.append(m)
