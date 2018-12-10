@@ -6,6 +6,9 @@ import numpy as np
 import pylab as pl
 from librosa.feature import mfcc
 import pywt
+from scipy.signal import savgol_filter
+from sklearn.cluster import KMeans
+window_size, poly_order = 5, 3
 # X = [1, 1, 2, 2]
 # Y = [3, 4, 4, 3]
 # Z = [1, 2, 1, 1]
@@ -78,20 +81,38 @@ import pywt
 
 # plt.plot([i for i in range(len(spindle))], spindle)
 # plt.show()
+data = pd.read_csv("train/02/PLC/plc.csv").values
+csv_nos = set(data[:,-1])
 c_max = []
 c_min = []
 c_ave = []
 c_var = []
 c_std = []
-
-for i in range(2,46):
-    data = pd.read_csv("train/01/Sensor/{}.csv".format(i+1)).values
-    c_max.append(data[:,0].max())
-    c_min.append(data[:,0].min())
-    c_ave.append(data[:,0].mean())
-    c_var.append(data[:,0].var())
-    c_std.append(data[:,0].std())
-c_index = [i for i in range(len(c_max))]
+for no in csv_nos:
+    spindle = []
+    for d in data:
+        if d[-1] is no:
+            spindle.append(d[1])
+    spindle = np.array(spindle)
+    c_max.append(spindle.max())
+    c_min.append(spindle.min())
+    c_ave.append(spindle.mean())
+    c_var.append(spindle.var())
+    c_std.append(spindle.std())
+# for i in range(2,46):
+#     data = pd.read_csv("train/01/Sensor/{}.csv".format(i+1)).values
+#     c_max.append(data[:,0].max())
+#     c_min.append(data[:,0].min())
+#     c_ave.append(data[:,0].mean())
+#     c_var.append(data[:,0].var())
+#     c_std.append(data[:,0].std())
+feature = c_max
+y_pred = KMeans(random_state=418).fit_predict(np.array(feature).reshape(-1, 1))
+plt.scatter([i for i in range(len(feature))], feature, c=y_pred)
+y1 = savgol_filter(feature, window_size, poly_order)
+plt.plot(feature)
+plt.plot(y1)
+# c_index = [i for i in range(len(c_max))]
 #
 #
 # sampling_rate = 25600
@@ -109,15 +130,20 @@ c_index = [i for i in range(len(c_max))]
 # pl.xlabel("frequency(Hz)")
 # pl.subplots_adjust(hspace=0.4)
 # pl.show()
-data = {"max": c_max, "min": c_min, "ave": c_ave, "var": c_var, "std": c_std, "index": c_index}
-data = pd.DataFrame(data)
-sns.pairplot(data, y_vars=["max", "min", "ave", "var", "std"], x_vars='index', size=12, aspect=1, kind='reg')
+# data = {"max": c_max, "min": c_min, "ave": c_ave, "var": c_var, "std": c_std, "index": c_index}
+# data = pd.DataFrame(data)
+# sns.pairplot(data, y_vars=["max", "min", "ave", "var", "std"], x_vars='index', size=12, aspect=1, kind='reg')
 # plt.scatter([i for i in range(48)], c_max, label='max')
 # plt.scatter([i for i in range(48)], c_min, label='min')
 # plt.scatter([i for i in range(48)], c_ave, label='ave')
 # plt.scatter([i for i in range(48)], c_var, label='var')
 # plt.scatter([i for i in range(48)], c_std, label='std')
-plt.legend(loc='upper right')
+# data = pd.read_csv("test/04/PLC/plc.csv").values
+# # y1 = savgol_filter(data[:,1][2500:-2500], window_size, poly_order)
+# y1 = savgol_filter(data[:,1], window_size, poly_order)
+# # y1 = savgol_filter(y1, window_size, poly_order)
+# plt.plot(y1)
+# plt.legend(loc='upper right')
 
 # plt.plot([i for i in range(len(data[:,0]))], data[:,0])
 plt.show()
